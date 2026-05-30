@@ -102,13 +102,9 @@ nav{background:#1A0A00;padding:0 2rem;display:flex;align-items:center;height:58p
 .chk-info{flex:1;}
 .chk-date{font-size:14px;font-weight:800;color:var(--ink);}
 .chk-sub{font-size:12.5px;font-weight:600;color:var(--muted);margin-top:1px;}
-.lunch-toggle{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--ink);}
-.toggle-switch{position:relative;width:38px;height:21px;cursor:pointer;}
-.toggle-switch input{opacity:0;width:0;height:0;position:absolute;}
-.toggle-track{position:absolute;inset:0;background:#ccc;border-radius:20px;transition:background .2s;border:2px solid var(--ink);}
-.toggle-switch input:checked+.toggle-track{background:var(--green);}
-.toggle-thumb{position:absolute;top:3px;left:3px;width:13px;height:13px;background:white;border-radius:50%;transition:transform .2s;}
-.toggle-switch input:checked~.toggle-thumb{transform:translateX(17px);}
+.lopt{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:700;color:var(--ink);background:#fff;border:1.5px solid var(--ink);border-radius:20px;padding:3px 10px;cursor:pointer;transition:all .12s;}
+.lopt:has(input:checked){background:var(--yellow);border-color:var(--ink);}
+.lopt input{display:none;}
 .submit-btn{width:100%;padding:14px;background:var(--red);color:#fff;font-family:'Press Start 2P',monospace;font-size:.65rem;letter-spacing:.04em;border:2.5px solid var(--ink);border-radius:10px;cursor:pointer;box-shadow:4px 4px 0 var(--ink);margin-top:.5rem;transition:transform .1s,box-shadow .1s;text-transform:uppercase;}
 .submit-btn:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink);}
 .submit-btn:active{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--ink);}
@@ -417,20 +413,28 @@ function renderSessions(){
     </div>`).join('');
 }
 
+function lunchBadge(pref){
+  if(!pref||pref==='none')return'<span style="font-size:11px;padding:2px 10px;border-radius:20px;background:#eee;color:#888;border:1.5px solid var(--ink);font-weight:800">No meal pref</span>';
+  if(pref==='halal')return'<span style="font-size:11px;padding:2px 10px;border-radius:20px;background:#FFECB3;color:#5D3E00;border:1.5px solid var(--ink);font-weight:800">Halal</span>';
+  if(pref==='vegetarian')return'<span style="font-size:11px;padding:2px 10px;border-radius:20px;background:#C8E6C9;color:#1B5E20;border:1.5px solid var(--ink);font-weight:800">Vegetarian</span>';
+  return'';
+}
+
 function renderRSVPSessions(doneWeeks=new Set(),existingRows=[]){
   document.getElementById('rsvp-sessions').innerHTML=SESSIONS.map(s=>{
     const done=doneWeeks.has(s.week);
-    const existingLunch=(existingRows.find(r=>r.week===s.week)||{}).lunch;
-    return `<div class="sci ${done?'done':''}" id="ri-${s.week}" ${!done?`onclick="toggleSes(${s.week})"`:''} >
+    const existingPref=(existingRows.find(r=>r.week===s.week)||{}).lunch_pref||'none';
+    return `<div class="sci ${done?'done':''}" id="ri-${s.week}" ${!done?`onclick="toggleSes(${s.week})"`:''}>
       <div class="chk-box"><svg class="chk-tick" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
-      <div class="chk-info">
+      <div class="chk-info" style="flex:1">
         <div class="chk-date">Week ${s.week} &middot; Saturday, ${s.date}</div>
-        <div class="chk-sub">${done?'&#10003; Already registered':'10:00am – 12:00pm'}</div>
+        <div class="chk-sub" style="margin-bottom:${done?'4px':'8px'}">${done?'&#10003; Already registered':'10:00am – 12:00pm'}</div>
+        ${!done?`<div class="lunch-opts" onclick="event.stopPropagation()" style="display:flex;gap:6px;flex-wrap:wrap">
+          <label class="lopt" id="lopt-none-${s.week}"><input type="radio" name="lunch-${s.week}" value="none" checked> No preference</label>
+          <label class="lopt" id="lopt-halal-${s.week}"><input type="radio" name="lunch-${s.week}" value="halal"> Halal</label>
+          <label class="lopt" id="lopt-veg-${s.week}"><input type="radio" name="lunch-${s.week}" value="vegetarian"> Vegetarian</label>
+        </div>`:`<div onclick="event.stopPropagation()" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">${lunchBadge(existingPref)}<button onclick="studentCancelRSVP(${s.week})" style="font-size:11px;font-weight:700;background:none;border:1.5px solid #ccc;border-radius:6px;padding:2px 10px;cursor:pointer;color:#aaa;transition:all .15s" onmouseover="this.style.color='var(--red)';this.style.borderColor='var(--red)'" onmouseout="this.style.color='#aaa';this.style.borderColor='#ccc'">cancel RSVP</button></div>`}
       </div>
-      ${!done
-        ?`<label class="lunch-toggle" onclick="event.stopPropagation()"><div class="toggle-switch"><input type="checkbox" id="lun-${s.week}" ${existingLunch?'checked':''}><div class="toggle-track"></div><div class="toggle-thumb"></div></div> Lunch</label>`
-        :`<span style="font-size:11px;padding:2px 10px;border-radius:20px;background:${existingLunch?'var(--green)':'#bbb'};color:#fff;border:1.5px solid var(--ink);font-weight:800">${existingLunch?'Lunch included':'No lunch'}</span>`
-      }
     </div>`;
   }).join('');
   if(doneWeeks.size===SESSIONS.length){
@@ -456,6 +460,15 @@ function toggleSes(w){
   if(el&&!el.classList.contains('done'))el.classList.toggle('selected');
 }
 
+async function studentCancelRSVP(week){
+  if(!confirm('Cancel your RSVP for Week '+week+'?'))return;
+  try{
+    await sbDel('rsvps','?name=eq.'+encodeURIComponent(currentUser)+'&week=eq.'+week);
+    showToast('RSVP cancelled for Week '+week);
+    loadExistingRSVP();
+  }catch(e){showToast('Error cancelling RSVP');}
+}
+
 async function submitRSVP(){
   const btn=document.getElementById('rsvp-submit-btn');
   const selected=SESSIONS.filter(s=>{const el=document.getElementById('ri-'+s.week);return el&&el.classList.contains('selected');});
@@ -463,8 +476,9 @@ async function submitRSVP(){
   btn.disabled=true;btn.textContent='SAVING...';
   try{
     for(const s of selected){
-      const lunch=(document.getElementById('lun-'+s.week)||{}).checked||false;
-      await sbPost('rsvps',{name:currentUser,week:s.week,session_date:s.date,lunch,attending:true});
+      const lunchPref=document.querySelector('input[name="lunch-'+s.week+'"]:checked');
+      const lunch_pref=lunchPref?lunchPref.value:'none';
+      await sbPost('rsvps',{name:currentUser,week:s.week,session_date:s.date,lunch_pref,attending:true});
     }
     document.getElementById('rsvp-form').style.display='none';
     document.getElementById('rsvp-success').style.display='block';
@@ -592,19 +606,43 @@ async function addComment(postId){
 
 async function loadAttendance(){
   try{
-    const rows=await sbGet('rsvps','?select=week,lunch,name');
+    const rows=await sbGet('rsvps','?select=week,lunch_pref,name,id&order=name.asc');
     document.getElementById('attendance-list').innerHTML=SESSIONS.map(s=>{
       const sw=(rows||[]).filter(r=>r.week===s.week);
-      const lunch=sw.filter(r=>r.lunch).length;
-      return`<div class="att-row">
-        <span class="att-date">Week ${s.week} &middot; ${s.date}</span>
-        <span class="att-pill">${sw.length} attending</span>
-        ${lunch?`<span class="lunch-pill">${lunch} for lunch</span>`:''}
+      const halal=sw.filter(r=>r.lunch_pref==='halal').length;
+      const veg=sw.filter(r=>r.lunch_pref==='vegetarian').length;
+      const none=sw.filter(r=>r.lunch_pref==='none'||!r.lunch_pref).length;
+      const nameList=sw.map(r=>{
+        const pref=r.lunch_pref&&r.lunch_pref!=='none'?` <span style="font-size:10px;padding:1px 7px;border-radius:10px;background:${r.lunch_pref==='halal'?'#FFECB3':r.lunch_pref==='vegetarian'?'#C8E6C9':'#eee'};color:${r.lunch_pref==='halal'?'#5D3E00':r.lunch_pref==='vegetarian'?'#1B5E20':'#666'};border:1px solid var(--ink);font-weight:700">${r.lunch_pref}</span>`:'';
+        return`<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px dashed var(--border)">
+          <div style="width:28px;height:28px;border-radius:50%;background:${avc(r.name)[0]};color:${avc(r.name)[1]};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;border:1.5px solid var(--ink);flex-shrink:0">${ini(r.name)}</div>
+          <span style="font-size:13px;font-weight:700;flex:1">${r.name}</span>${pref}
+          <button onclick="cancelRSVP('${r.id}','${r.name}',${s.week})" style="background:none;border:1.5px solid #ccc;border-radius:6px;font-size:11px;font-weight:700;color:#aaa;cursor:pointer;padding:2px 8px;transition:all .15s" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='#ccc';this.style.color='#aaa'">remove</button>
+        </div>`;
+      }).join('');
+      return`<div style="background:#fff;border:2px solid var(--ink);border-radius:10px;padding:1rem;margin-bottom:1rem;box-shadow:2px 2px 0 var(--ink)">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+          <span style="font-family:'Press Start 2P',monospace;font-size:.5rem;color:var(--ink)">WEEK ${s.week} &middot; ${s.date}</span>
+          <span class="att-pill">${sw.length} attending</span>
+          ${halal?`<span style="font-size:11px;padding:2px 9px;border-radius:20px;background:#FFECB3;color:#5D3E00;border:1.5px solid var(--ink);font-weight:700">${halal} halal</span>`:''}
+          ${veg?`<span style="font-size:11px;padding:2px 9px;border-radius:20px;background:#C8E6C9;color:#1B5E20;border:1.5px solid var(--ink);font-weight:700">${veg} vegetarian</span>`:''}
+        </div>
+        ${sw.length?nameList:`<div style="font-size:13px;color:var(--muted);font-weight:600;padding:4px 0">No registrations yet</div>`}
       </div>`;
     }).join('');
   }catch(e){
     document.getElementById('attendance-list').innerHTML='<p style="font-size:13px;color:var(--muted);font-weight:600">Could not load attendance.</p>';
+    console.error(e);
   }
+}
+
+async function cancelRSVP(id,name,week){
+  if(!confirm('Remove '+name+' from Week '+week+'?'))return;
+  try{
+    await sbDel('rsvps','?id=eq.'+id);
+    showToast(name+' removed from Week '+week);
+    loadAttendance();
+  }catch(e){showToast('Error removing RSVP');}
 }
 
 // NAV CLICK WIRING
