@@ -16,15 +16,17 @@
 }
 body{font-family:'Nunito',sans-serif;background:#FFF9ED;color:var(--ink);min-height:100vh;}
 .rainbow-stripe{height:8px;background:linear-gradient(90deg,var(--r1) 0% 16.6%,var(--r2) 16.6% 33.2%,var(--r3) 33.2% 49.8%,var(--r4) 49.8% 66.4%,var(--r5) 66.4% 83%,var(--r6) 83% 100%);}
-nav{background:#1A0A00;padding:0 2rem;display:flex;align-items:center;height:58px;position:sticky;top:0;z-index:100;border-bottom:3px solid var(--yellow);}
-.nav-brand{font-family:'Press Start 2P',monospace;font-size:.75rem;color:var(--yellow);margin-right:auto;line-height:1.4;}
-.nav-brand span{display:block;font-size:.45rem;color:rgba(255,214,0,0.6);margin-top:3px;}
-.nav-user{font-size:13px;font-weight:700;color:rgba(255,255,255,0.7);display:flex;align-items:center;gap:10px;}
+nav{background:#1A0A00;padding:0;display:flex;flex-direction:column;position:sticky;top:0;z-index:100;border-bottom:3px solid var(--yellow);}
+.nav-top{display:flex;align-items:center;padding:0 1.25rem;height:46px;gap:10px;}
+.nav-brand{font-family:'Press Start 2P',monospace;font-size:.65rem;color:var(--yellow);margin-right:auto;line-height:1.4;}
+.nav-brand span{display:block;font-size:.38rem;color:rgba(255,214,0,0.6);margin-top:2px;}
+.nav-user{font-size:12px;font-weight:700;color:rgba(255,255,255,0.7);display:flex;align-items:center;gap:8px;flex-shrink:0;}
 .nav-user strong{color:var(--yellow);}
-.logout-btn{background:none;border:1.5px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.5);font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;padding:4px 10px;border-radius:6px;cursor:pointer;transition:all .15s;}
+.logout-btn{background:none;border:1.5px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.5);font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;cursor:pointer;transition:all .15s;white-space:nowrap;}
 .logout-btn:hover{border-color:var(--yellow);color:var(--yellow);}
-.nav-tabs{display:flex;list-style:none;height:100%;margin-right:1rem;}
-.nav-tab{background:none;border:none;cursor:pointer;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;color:rgba(255,255,255,0.6);padding:0 .9rem;height:100%;display:flex;align-items:center;border-bottom:3px solid transparent;transition:color .15s,border-color .15s;position:relative;top:1.5px;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;}
+.nav-tabs{display:flex;list-style:none;height:38px;overflow-x:auto;scrollbar-width:none;padding:0 1.25rem;border-top:1px solid rgba(255,255,255,0.08);}
+.nav-tabs::-webkit-scrollbar{display:none;}
+.nav-tab{background:none;border:none;cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;color:rgba(255,255,255,0.6);padding:0 .85rem;height:100%;display:flex;align-items:center;border-bottom:3px solid transparent;transition:color .15s,border-color .15s;position:relative;top:1.5px;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;}
 .nav-tab:hover{color:#fff;}
 .nav-tab.active{color:var(--yellow);border-bottom-color:var(--yellow);}
 .page{display:none;}.page.active{display:block;}
@@ -55,7 +57,7 @@ nav{background:#1A0A00;padding:0 2rem;display:flex;align-items:center;height:58p
 .poster-img{width:100%;border:3px solid var(--ink);box-shadow:6px 6px 0 var(--ink);border-radius:10px 10px 0 0;display:block;}
 
 /* SECTIONS */
-.section{padding:2.5rem 2rem;max-width:880px;margin:0 auto;}
+.section{padding:2.5rem 1.5rem;max-width:880px;margin:0 auto;}
 .section-label{font-family:'Press Start 2P',monospace;font-size:.55rem;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:6px;}
 .section-title{font-size:1.65rem;font-weight:900;color:var(--ink);margin-bottom:.25rem;}
 .section-sub{font-size:14px;color:var(--muted);margin-bottom:1.75rem;font-weight:600;}
@@ -185,7 +187,7 @@ nav{background:#1A0A00;padding:0 2rem;display:flex;align-items:center;height:58p
 @media(max-width:600px){
   nav{padding:0 .75rem;}
   .nav-tab{padding:0 .55rem;font-size:11px;}
-  .section{padding:2rem 1.25rem;}
+  .section{padding:1.5rem 1rem;}
   .session-card{grid-template-columns:68px 1fr;}
   .s-day{font-size:1.1rem;}
   .new-post-box textarea{min-height:80px;}
@@ -207,17 +209,19 @@ nav{background:#1A0A00;padding:0 2rem;display:flex;align-items:center;height:58p
 <body>
 <div class="rainbow-stripe"></div>
 <nav>
-  <div class="nav-brand">TLDR FINANCE<span>4-WEEK PROGRAMME</span></div>
+  <div class="nav-top">
+    <div class="nav-brand">TLDR FINANCE<span>4-WEEK PROGRAMME</span></div>
+    <div class="nav-user" id="nav-user" style="display:none">
+      Hi, <strong id="nav-name"></strong>
+      <button class="logout-btn" onclick="logout()">Log out</button>
+    </div>
+  </div>
   <ul class="nav-tabs" id="nav-tabs" style="display:none">
     <li><button class="nav-tab active" onclick="switchTab(this,'home')">Programme</button></li>
     <li><button class="nav-tab" onclick="switchTab(this,'rsvp')">RSVP</button></li>
     <li><button class="nav-tab" onclick="switchTab(this,'reflections')">Reflections</button></li>
     <li><button class="nav-tab" onclick="switchTab(this,'about')">About</button></li>
   </ul>
-  <div class="nav-user" id="nav-user" style="display:none">
-    Hi, <strong id="nav-name"></strong>
-    <button class="logout-btn" onclick="logout()">Log out</button>
-  </div>
 </nav>
 
 <!-- LOGIN -->
