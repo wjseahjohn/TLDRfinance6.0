@@ -614,7 +614,7 @@ async function loadPosts(){
           <div id="cb-${p.id}">${cmtHtml}</div>
           <div class="c-input-row">
             <input type="text" id="ct-${p.id}" placeholder="Add a comment&hellip;">
-            <label class="mentor-check" style="gap:5px"><input type="checkbox" id="cm-${p.id}" style="margin:0;width:14px;height:14px;cursor:pointer"> Mentor</label>
+            <label style="display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;white-space:nowrap"><input type="checkbox" id="cm-${p.id}" style="margin:0;width:13px;height:13px;cursor:pointer;flex-shrink:0"> Mentor</label>
             <button class="c-send" onclick="addComment('${p.id}')">Post</button>
           </div>
         </div>
