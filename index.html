@@ -415,6 +415,7 @@ function renderSessions(){
 
 function lunchBadge(pref){
   if(!pref||pref==='none')return'<span style="font-size:11px;padding:2px 10px;border-radius:20px;background:#eee;color:#888;border:1.5px solid var(--ink);font-weight:800">No meal pref</span>';
+  if(pref==='not joining')return'<span style="font-size:11px;padding:2px 10px;border-radius:20px;background:#f5f5f5;color:#999;border:1.5px solid var(--ink);font-weight:800">Not joining lunch</span>';
   if(pref==='halal')return'<span style="font-size:11px;padding:2px 10px;border-radius:20px;background:#FFECB3;color:#5D3E00;border:1.5px solid var(--ink);font-weight:800">Halal</span>';
   if(pref==='vegetarian')return'<span style="font-size:11px;padding:2px 10px;border-radius:20px;background:#C8E6C9;color:#1B5E20;border:1.5px solid var(--ink);font-weight:800">Vegetarian</span>';
   return'';
@@ -429,10 +430,16 @@ function renderRSVPSessions(doneWeeks=new Set(),existingRows=[]){
       <div class="chk-info" style="flex:1">
         <div class="chk-date">Week ${s.week} &middot; Saturday, ${s.date}</div>
         <div class="chk-sub" style="margin-bottom:${done?'4px':'8px'}">${done?'&#10003; Already registered':'10:00am – 12:00pm'}</div>
-        ${!done?`<div class="lunch-opts" onclick="event.stopPropagation()" style="display:flex;gap:6px;flex-wrap:wrap">
-          <label class="lopt" id="lopt-none-${s.week}"><input type="radio" name="lunch-${s.week}" value="none" checked> No preference</label>
-          <label class="lopt" id="lopt-halal-${s.week}"><input type="radio" name="lunch-${s.week}" value="halal"> Halal</label>
-          <label class="lopt" id="lopt-veg-${s.week}"><input type="radio" name="lunch-${s.week}" value="vegetarian"> Vegetarian</label>
+        ${!done?`<div onclick="event.stopPropagation()" style="margin-top:2px">
+          <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap">
+            <label class="lopt" id="lj-yes-${s.week}" onclick="toggleLunchPref(${s.week},true)"><input type="radio" name="joining-${s.week}" value="yes"> Joining for lunch</label>
+            <label class="lopt" id="lj-no-${s.week}" onclick="toggleLunchPref(${s.week},false)"><input type="radio" name="joining-${s.week}" value="no" checked> Not joining</label>
+          </div>
+          <div id="lpref-${s.week}" style="display:none;flex-wrap:wrap;gap:6px">
+            <label class="lopt" id="lopt-none-${s.week}"><input type="radio" name="lunch-${s.week}" value="none" checked> No preference</label>
+            <label class="lopt" id="lopt-halal-${s.week}"><input type="radio" name="lunch-${s.week}" value="halal"> Halal</label>
+            <label class="lopt" id="lopt-veg-${s.week}"><input type="radio" name="lunch-${s.week}" value="vegetarian"> Vegetarian</label>
+          </div>
         </div>`:`<div onclick="event.stopPropagation()" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">${lunchBadge(existingPref)}<button onclick="studentCancelRSVP(${s.week})" style="font-size:11px;font-weight:700;background:none;border:1.5px solid #ccc;border-radius:6px;padding:2px 10px;cursor:pointer;color:#aaa;transition:all .15s" onmouseover="this.style.color='var(--red)';this.style.borderColor='var(--red)'" onmouseout="this.style.color='#aaa';this.style.borderColor='#ccc'">cancel RSVP</button></div>`}
       </div>
     </div>`;
@@ -460,6 +467,11 @@ function toggleSes(w){
   if(el&&!el.classList.contains('done'))el.classList.toggle('selected');
 }
 
+function toggleLunchPref(week,show){
+  const el=document.getElementById('lpref-'+week);
+  if(el)el.style.display=show?'flex':'none';
+}
+
 async function studentCancelRSVP(week){
   if(!confirm('Cancel your RSVP for Week '+week+'?'))return;
   try{
@@ -476,8 +488,10 @@ async function submitRSVP(){
   btn.disabled=true;btn.textContent='SAVING...';
   try{
     for(const s of selected){
-      const lunchPref=document.querySelector('input[name="lunch-'+s.week+'"]:checked');
-      const lunch_pref=lunchPref?lunchPref.value:'none';
+      const joiningEl=document.querySelector('input[name="joining-'+s.week+'"]:checked');
+      const joining=joiningEl?joiningEl.value==='yes':false;
+      const lunchPrefEl=document.querySelector('input[name="lunch-'+s.week+'"]:checked');
+      const lunch_pref=joining?(lunchPrefEl?lunchPrefEl.value:'none'):'not joining';
       await sbPost('rsvps',{name:currentUser,week:s.week,session_date:s.date,lunch_pref,attending:true});
     }
     document.getElementById('rsvp-form').style.display='none';
@@ -611,7 +625,9 @@ async function loadAttendance(){
       const sw=(rows||[]).filter(r=>r.week===s.week);
       const halal=sw.filter(r=>r.lunch_pref==='halal').length;
       const veg=sw.filter(r=>r.lunch_pref==='vegetarian').length;
-      const none=sw.filter(r=>r.lunch_pref==='none'||!r.lunch_pref).length;
+      const noMealPref=sw.filter(r=>r.lunch_pref==='none').length;
+      const notJoining=sw.filter(r=>r.lunch_pref==='not joining'||!r.lunch_pref).length;
+      const lunchTotal=sw.filter(r=>r.lunch_pref&&r.lunch_pref!=='not joining').length;
       const nameList=sw.map(r=>{
         const pref=r.lunch_pref&&r.lunch_pref!=='none'?` <span style="font-size:10px;padding:1px 7px;border-radius:10px;background:${r.lunch_pref==='halal'?'#FFECB3':r.lunch_pref==='vegetarian'?'#C8E6C9':'#eee'};color:${r.lunch_pref==='halal'?'#5D3E00':r.lunch_pref==='vegetarian'?'#1B5E20':'#666'};border:1px solid var(--ink);font-weight:700">${r.lunch_pref}</span>`:'';
         return`<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px dashed var(--border)">
@@ -624,8 +640,10 @@ async function loadAttendance(){
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
           <span style="font-family:'Press Start 2P',monospace;font-size:.5rem;color:var(--ink)">WEEK ${s.week} &middot; ${s.date}</span>
           <span class="att-pill">${sw.length} attending</span>
+          ${lunchTotal?`<span style="font-size:11px;padding:2px 9px;border-radius:20px;background:#BBDEFB;color:#0D47A1;border:1.5px solid var(--ink);font-weight:700">${lunchTotal} for lunch</span>`:''}
           ${halal?`<span style="font-size:11px;padding:2px 9px;border-radius:20px;background:#FFECB3;color:#5D3E00;border:1.5px solid var(--ink);font-weight:700">${halal} halal</span>`:''}
           ${veg?`<span style="font-size:11px;padding:2px 9px;border-radius:20px;background:#C8E6C9;color:#1B5E20;border:1.5px solid var(--ink);font-weight:700">${veg} vegetarian</span>`:''}
+          ${notJoining?`<span style="font-size:11px;padding:2px 9px;border-radius:20px;background:#f5f5f5;color:#888;border:1.5px solid var(--ink);font-weight:700">${notJoining} not joining</span>`:''}
         </div>
         ${sw.length?nameList:`<div style="font-size:13px;color:var(--muted);font-weight:600;padding:4px 0">No registrations yet</div>`}
       </div>`;
