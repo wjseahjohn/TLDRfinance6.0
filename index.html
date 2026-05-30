@@ -601,15 +601,14 @@ async function loadPosts(){
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             ${cmts.length} comment${cmts.length!==1?'s':''}
           </button>
-          ${p.name===currentUser?`
-          <button class="action-btn" onclick="editPost('${p.id}','${p.content.replace(/'/g,"\'")}')" style="margin-left:auto">
+          <button class="action-btn" onclick="editPost('${p.id}')" style="margin-left:auto">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             Edit
           </button>
           <button class="action-btn" onclick="deletePost('${p.id}')" style="color:var(--red)">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
             Delete
-          </button>`:''}</div>
+          </button></div>
         <div class="comments-section" id="cs-${p.id}" style="display:${cmts.length?'block':'none'}">
           <div id="cb-${p.id}">${cmtHtml}</div>
           <div class="c-input-row">
@@ -638,10 +637,10 @@ async function deletePost(id){
   }catch(e){showToast('Error deleting reflection');}
 }
 
-function editPost(id,currentText){
+function editPost(id){
   const card=document.getElementById('post-text-'+id);
   if(!card)return;
-  const original=card.textContent;
+  const original=card.textContent.trim();
   card.innerHTML=`<textarea id="edit-ta-${id}" style="width:100%;min-height:80px;border:2px solid var(--ink);border-radius:8px;padding:8px 10px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:600;color:var(--ink);background:#FFFDE7;resize:vertical;outline:none">${original}</textarea>
     <div style="display:flex;gap:8px;margin-top:8px">
       <button onclick="saveEdit('${id}')" style="padding:6px 16px;background:var(--blue);color:#fff;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;border:2px solid var(--ink);border-radius:8px;cursor:pointer;box-shadow:2px 2px 0 var(--ink)">Save</button>
