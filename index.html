@@ -280,10 +280,10 @@ nav{background:#1A0A00;padding:0 2rem;display:flex;align-items:center;height:58p
         <textarea id="new-post-text" placeholder="What was your biggest takeaway this week? What shifted for you?"></textarea>
         <div class="post-footer">
           <select class="post-week-sel" id="new-post-week">
-            <option value="1">Week 1 &middot; 6 Jun</option>
-            <option value="2">Week 2 &middot; 13 Jun</option>
-            <option value="3">Week 3 &middot; 20 Jun</option>
-            <option value="4">Week 4 &middot; 27 Jun</option>
+            <option value="1">Week 1 &middot; The Advisory Process</option>
+            <option value="2">Week 2 &middot; Why Some People Become Rich Faster</option>
+            <option value="3">Week 3 &middot; The Business Behind The Business</option>
+            <option value="4">Week 4 &middot; Designing Your Financial Blueprint</option>
           </select>
           <button class="post-btn" onclick="submitPost()" id="post-submit-btn">Share &#9654;</button>
         </div>
@@ -326,10 +326,30 @@ const SUPABASE_URL = 'https://dghklsmqbojvdctcdsol.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRnaGtsc21xYm9qdmRjdGNkc29sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNDk4NjUsImV4cCI6MjA5NTcyNTg2NX0.EqKinsA-vvZO3bYNngiHE6b88BL-pUTpXPQ4a938AvE';
 
 const SESSIONS = [
-  {week:1,day:'6',month:'JUN',weekday:'SAT',date:'6 Jun',title:'Session 1',placeholder:'Topic & book to be announced'},
-  {week:2,day:'13',month:'JUN',weekday:'SAT',date:'13 Jun',title:'Session 2',placeholder:'Topic & book to be announced'},
-  {week:3,day:'20',month:'JUN',weekday:'SAT',date:'20 Jun',title:'Session 3',placeholder:'Topic & book to be announced'},
-  {week:4,day:'27',month:'JUN',weekday:'SAT',date:'27 Jun',title:'Session 4',placeholder:'Topic & book to be announced'}
+  {week:1,day:'6',month:'JUN',weekday:'SAT',date:'6 Jun',
+   title:'The Advisory Process',
+   subtitle:'What actually happens inside a financial advisory business?',
+   book:'30 Lessons in 30 Years by Ray Tan',
+   lessons:'Lessons 1 – 7',
+   agenda:[{time:'10am',item:'The Advisory Process'},{ time:'11am',item:'Entrepreneurship Forum'},{time:'12pm',item:'Million Dollar Lunch'}]},
+  {week:2,day:'13',month:'JUN',weekday:'SAT',date:'13 Jun',
+   title:'Why Some People Become Rich Faster',
+   subtitle:'Supply & Demand of Human Capital',
+   book:'30 Lessons in 30 Years by Ray Tan',
+   lessons:'Lessons 8 – 15',
+   agenda:[{time:'10am',item:'Why Some People Become Rich Faster Than Others'},{time:'11am',item:'Entrepreneurship Forum'},{time:'12pm',item:'Million Dollar Lunch'}]},
+  {week:3,day:'20',month:'JUN',weekday:'SAT',date:'20 Jun',
+   title:'The Business Behind The Business',
+   subtitle:'Building An Advisory Practice',
+   book:'30 Lessons in 30 Years by Ray Tan',
+   lessons:'Lessons 16 – 22',
+   agenda:[{time:'10am',item:'The Business Behind The Business: Building An Advisory Practice'},{time:'11am',item:'Entrepreneurship Forum'},{time:'12pm',item:'Million Dollar Lunch'}]},
+  {week:4,day:'27',month:'JUN',weekday:'SAT',date:'27 Jun',
+   title:'Designing Your Financial Blueprint',
+   subtitle:'The Next 10 Years',
+   book:'30 Lessons in 30 Years by Ray Tan',
+   lessons:'Lessons 23 – 30',
+   agenda:[{time:'10am',item:'Designing Your Financial Blueprint: The Next 10 Years'},{time:'11am',item:'Entrepreneurship Forum'},{time:'12pm',item:'Million Dollar Lunch'}]}
 ];
 
 const AV=[['#FFECB3','#5D3E00'],['#C8E6C9','#1B5E20'],['#BBDEFB','#0D47A1'],['#F8BBD9','#880E4F'],['#FFE0B2','#BF360C'],['#E1BEE7','#4A148C']];
@@ -355,8 +375,10 @@ let activeWeek='all';
 let myLikes={};
 
 function doLogin(){
-  const name=document.getElementById('login-name').value.trim();
-  if(!name){document.getElementById('login-name').focus();return;}
+  const raw=document.getElementById('login-name').value.trim();
+  if(!raw){document.getElementById('login-name').focus();return;}
+  // Normalize to Title Case so 'john', 'JOHN', 'John' all match
+  const name=raw.toLowerCase().replace(/\b\w/g,c=>c.toUpperCase());
   currentUser=name;
   sessionStorage.setItem('tldr_user',name);
   showApp();
@@ -404,10 +426,16 @@ function renderSessions(){
       <div class="sbody">
         <span class="s-wbadge">WEEK ${s.week}</span>
         <div class="s-title">${s.title}</div>
-        <div class="s-ph">${s.placeholder}</div>
-        <div class="s-time">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          10:00am &ndash; 12:00pm <span class="lunch-tag">+ Lunch</span>
+        <div class="s-subtitle" style="font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:8px;font-style:italic">${s.subtitle}</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap">
+          <span style="font-size:11px;font-weight:700;background:#F8BBD9;color:#880E4F;border:1.5px solid var(--ink);border-radius:20px;padding:2px 9px">📖 ${s.book}</span>
+          <span style="font-size:11px;font-weight:700;background:#E1BEE7;color:#4A148C;border:1.5px solid var(--ink);border-radius:20px;padding:2px 9px">${s.lessons}</span>
+        </div>
+        <div style="border-top:2px dashed var(--border);padding-top:8px;display:grid;gap:4px">
+          ${s.agenda.map(a=>`<div style="display:flex;gap:8px;align-items:baseline">
+            <span style="font-family:'Press Start 2P',monospace;font-size:.4rem;color:var(--road-stripe);white-space:nowrap;min-width:32px">${a.time}</span>
+            <span style="font-size:12.5px;font-weight:600;color:var(--ink)">${a.item}</span>
+          </div>`).join('')}
         </div>
       </div>
     </div>`).join('');
